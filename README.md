@@ -25,8 +25,7 @@ main with a call to the `entry` function. This means that the main file for a zL
 ```C
 #include <zlib/zentry.h>
 
-int entry(zargs args) {
-    return 0; /* A return statement is required, as this is not the main() function */
+void entry(zargs args) {
 }
 ```
 In the future, it will be possible to disable this behavior.
@@ -38,13 +37,11 @@ containing all the arguments. This means that a program to read out each command
 #include <stdio.h>
 #include <zlib/zentry.h>
 
-int entry(zargs args) {
+void entry(zargs args) {
     int i;
     for(i = 0; i < args.count; ++i) {
         puts(args.get[i]);
     }
-    
-    return 0;
 }
 ```
 
@@ -68,7 +65,7 @@ The following example shows their basic usage:
 #include <zlib/zentry.h>
 #include <zlib/zlist.h>
 
-int entry(zargs args) {
+void entry(zargs args) {
     size_t i; /* List index variable */
 
     zlist_of(int) mylist; /* Declare a list of ints called 'mylist' */
@@ -88,8 +85,6 @@ int entry(zargs args) {
     
     /* Free the memory allocated for mylist */
     zlist_free(mylist);
-    
-    return 0; /* Return statement */
 }
 ```
 
@@ -102,7 +97,7 @@ The add statements could be used to change the previous code as such:
 #include <zlib/zentry.h>
 #include <zlib/zlist.h>
 
-int entry(zargs args) {
+void entry(zargs args) {
     size_t i; /* List index variable */
 
     zlist_of(int) mylist; /* Declare a list of ints called 'mylist' */
@@ -122,8 +117,6 @@ int entry(zargs args) {
     
     /* Free the memory allocated for mylist */
     zlist_free(mylist);
-    
-    return 0; /* Return statement */
 }
 ```
 
@@ -132,23 +125,58 @@ One of the most important things about lists is that they throw exceptions. For 
 #include <zlib/zentry.h>
 #include <zlib/zlist.h>
 
-int entry(zargs args) {
+void entry(zargs args) {
     zlist_of(int) mylist;
     zlist_init(mylist, 0);
     
     int i = zlist_get(mylist, 1);
     
     zlist_free(mylist);
-    
-    return 0;
 }
 ```
 will exit with the error message `Exiting: Index out of list bounds!` The obvious issue here is that the program never reaches
 the `zlist_free()` statement, and as such, will leak memory.
 
-This will be addressed soon...
+This is why zLib supports having an "exit handler." Essentially, if the variable `exit_handler` is set to a function meant to be called upon exit, the exit handler will be called. This function must take zero arguments and return int. This allows for the creation of safe programs that can still throw exceptions. Also important to note is that the exit handler is called upon a normal exit as well as an exit due to an exception, so exit code does not have to be duplicated. For example:
+```C
+#include <stdio.h>
+#include <zlib/zentry.h>
+#include <zlib/zlist.h>
 
-Exceptions are a very important feature of zlib. The reason for their existence is to make it easier to write programs that can
+/* Declare list variable */
+zlist_of(int) mylist;
+
+/* Exit handler */
+int handle_exit();
+
+void entry(zargs args) {
+    /* Setup exit handler */
+    exit_handler = &handle_exit;
+    
+    size_t i; /* List index */
+
+    /* Initialize list with zero elements */
+    zlist_init(mylist, 0);
+    
+    /* Add some elements to the list */
+    for(i = 0; i < 5; ++i) {
+        zlist_add(mylist, i * 2);
+    }
+    
+    /* Print out the list */
+    for(i = 0; i <= zlist_size(mylist); ++i) { /* Uh oh! That should be <, not <=! */
+        printf("%d\n", zlist_get(mylist, i));
+    }
+    /* An exception will be thrown due to the index being out of bounds, and the exit handler will be called. */
+}
+
+/* Exit handler to clean up memory */
+int handle_exit() {
+    zlist_free(mylist);
+}
+```
+
+Exceptions are a very important feature of zLib. The reason for their existence is to make it easier to write programs that can
 recover from errors such as segfaults. They are implemented using `setjmp()` and `longjmp()`. Catching an exception is very
 simple:
 ```C
@@ -156,7 +184,7 @@ simple:
 #include <zlib/zlist.h>
 #include <zlib/zexception.h> /* Include exception header for TRY / CATCH */
 
-int entry(zargs args) {
+void entry(zargs args) {
     zlist_of(int) mylist;
     zlist_init(mylist, 0);
     
@@ -168,8 +196,6 @@ int entry(zargs args) {
     }
     
     zlist_free(mylist);
-    
-    return 0;
 }
 ```
 In fact, the `CATCH` block is not even necessary. The exception message is stored in `except_msg` and can be printed from there.
