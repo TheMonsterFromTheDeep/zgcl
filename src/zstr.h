@@ -15,7 +15,7 @@ zstr *zstr_from(const char*);
 int zstr_eq(zstr*,zstr*);
 int zstr_eqc(zstr*,const char*);
 
-void zstr_expand(zstr*);
+void zstr_expand(zstr*,size_t);
 
 void zstr_cat(zstr*,const zstr*);
 void zstr_catc(zstr*,const char*);
