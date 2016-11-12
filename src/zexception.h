@@ -21,7 +21,8 @@ typedef struct zargs {
     char** get;
 } zargs;
 
-int entry(zargs);
+void entry(zargs);
+int (*exit_handler)(void);
 
 int main(int,char*[]); 
 #endif

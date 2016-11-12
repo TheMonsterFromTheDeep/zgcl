@@ -3,10 +3,15 @@
 
 #include "zentry.h"
 
+#define EXIT if(exit_handler) { return exit_handler(); } else return 0
+
 int main(int argc, char *argv[]) {
+    exit_handler = NULL;
+
     if(setjmp(except_buf)) {
         printf("Exiting: %s\n", except_msg);
-        return 0;
+        EXIT;
     }
-    return entry((zargs){ argc, argv });
+    entry((zargs){ argc, argv });
+    EXIT;
 }
