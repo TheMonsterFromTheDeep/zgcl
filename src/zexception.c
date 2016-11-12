@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
         printf("Exiting: %s\n", except_msg);
         EXIT;
     }
+
     entry((zargs){ argc, argv });
     EXIT;
 }

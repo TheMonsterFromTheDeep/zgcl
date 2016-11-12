@@ -19,6 +19,9 @@ void zstr_expand(zstr*,size_t);
 
 void zstr_cat(zstr*,const zstr*);
 void zstr_catc(zstr*,const char*);
+void zstr_catb(zstr*,char);
+
+void zstr_backspace(zstr*);
 
 void zstr_free(zstr*);
 

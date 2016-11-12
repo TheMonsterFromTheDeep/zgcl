@@ -65,8 +65,8 @@ void zstr_expand(zstr *a, size_t amount) {
             return;
         }
         a->data = tmp;
-        a->data[a->size] = '\0';
     }
+    a->data[total] = '\0';
 }
 
 void zstr_cat(zstr *str, const zstr *app) {
@@ -87,6 +87,19 @@ void zstr_catc(zstr *str, const char *app) {
         str->data[str->size + i] = app[i];
     }
     str->size += len;
+}
+
+void zstr_catb(zstr *str, char c) {
+    if(!str) { return; }
+    zstr_expand(str, 1);
+    str->data[str->size++] = c;
+}
+
+void zstr_backspace(zstr *str) {
+    if(!str) { return; }
+    if(!str->data) { return; }
+    if(str->size == 0) { return; }
+    str->data[--str->size] = '\0';
 }
 
 void zstr_free(zstr *str) {
