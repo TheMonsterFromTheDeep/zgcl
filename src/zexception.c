@@ -15,6 +15,10 @@ const char *error_msg() {
     return except_msg;
 }
 
+void set_exit_handler(int (*handler)(void)) {
+    exit_handler = handler;
+}
+
 int main(int argc, char *argv[]) {
     exit_handler = NULL;
 

@@ -30,7 +30,7 @@ extern size_t *zlist_alloc_ptr(void*);
 #else
     #define zlist_set(name,index,value) ((name)[zlist_index((name),(index))] = (value))
     #define zlist_get(name,index) ((name)[zlist_index((name),(index))])
-    #define zlist_get_ptr(name,index) ((name) + zlist_index((name),(index))])
+    #define zlist_get_ptr(name,index) ((name) + zlist_index((name),(index)))
 #endif
 #define zlist_add(name,value) do { \
     name = zlist_fit(name,sizeof(*name)); \

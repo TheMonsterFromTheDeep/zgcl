@@ -20,6 +20,7 @@ typedef struct zargs {
 } zargs;
 
 extern void entry(zargs);
+extern void set_exit_handler(int (*)(void));
 #endif
 
 extern int main(int,char*[]); 
