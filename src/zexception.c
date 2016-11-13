@@ -3,16 +3,26 @@
 
 #include "zentry.h"
 
-#define EXIT if(exit_handler) { return exit_handler(); } else return 0
+static int (*exit_handler)(void);
+static const char *except_msg;
+
+void throw(const char *msg) {
+    except_msg = msg;
+    longjmp(except_buf, 0);
+}
+
+const char *error_msg() {
+    return except_msg;
+}
 
 int main(int argc, char *argv[]) {
     exit_handler = NULL;
 
     if(setjmp(except_buf)) {
         printf("Exiting: %s\n", except_msg);
-        EXIT;
+        return exit_handler ? exit_handler() : 0;
     }
 
     entry((zargs){ argc, argv });
-    EXIT;
+    return exit_handler ? exit_handler() : 0;
 }

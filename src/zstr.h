@@ -9,20 +9,25 @@ typedef struct zstr {
     size_t alloc;
 } zstr;
 
-zstr *zstr_empty(void);
-zstr *zstr_from(const char*);
+extern zstr *zstr_empty(void);
+extern zstr *zstr_from(const char*);
 
-int zstr_eq(zstr*,zstr*);
-int zstr_eqc(zstr*,const char*);
+extern int zstr_eqz(const zstr*,const zstr*);
+extern int zstr_eqs(const zstr*,const char*);
+extern int zstr_eqc(const zstr*,char);
 
-void zstr_expand(zstr*,size_t);
+extern void zstr_expand(zstr*,size_t);
 
-void zstr_cat(zstr*,const zstr*);
-void zstr_catc(zstr*,const char*);
-void zstr_catb(zstr*,char);
+extern void zstr_catz(zstr*,const zstr*);
+extern void zstr_cats(zstr*,const char*);
+extern void zstr_catc(zstr*,char);
 
-void zstr_backspace(zstr*);
+extern void zstr_insertz(zstr*,size_t,const zstr*);
+extern void zstr_inserts(zstr*,size_t,const char*);
+extern void zstr_insertc(zstr*,size_t,char);
 
-void zstr_free(zstr*);
+extern void zstr_backspace(zstr*);
+
+extern void zstr_free(zstr*);
 
 #endif

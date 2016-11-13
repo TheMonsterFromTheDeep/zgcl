@@ -7,13 +7,11 @@
 #include "zstr.h"
 
 jmp_buf except_buf;
-
-const char *except_msg;
+extern void throw(const char *msg);
+extern const char *error_msg(void);
 
 #define TRY if(!setjmp(except_buf))
 #define CATCH else
-
-#define THROW(msg) do { except_msg = (msg); longjmp(except_buf,0); } while(0)
 
 #ifdef Z_ENTRY
 typedef struct zargs {
@@ -21,10 +19,9 @@ typedef struct zargs {
     char** get;
 } zargs;
 
-void entry(zargs);
-int (*exit_handler)(void);
-
-int main(int,char*[]); 
+extern void entry(zargs);
 #endif
+
+extern int main(int,char*[]); 
 
 #endif
