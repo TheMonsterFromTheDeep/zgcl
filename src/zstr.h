@@ -28,6 +28,8 @@ extern void zstr_insertc(zstr*,size_t,char);
 
 extern void zstr_backspace(zstr*);
 
+extern void zstr_clear(zstr*);
+
 extern void zstr_free(zstr*);
 
 #endif

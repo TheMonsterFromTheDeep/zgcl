@@ -176,6 +176,13 @@ void zstr_backspace(zstr *str) {
     str->data[--str->size] = '\0';
 }
 
+void zstr_clear(zstr *str) {
+    if(!str) { return; }
+    if(!str->data) { return; }
+    str->size = 0;
+    str->data[0] = '\0';
+}
+
 void zstr_free(zstr *str) {
     if(!str) { return; }
     free(str->data);
