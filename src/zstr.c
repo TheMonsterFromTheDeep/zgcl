@@ -31,6 +31,25 @@ zstr *zstr_from(const char *base) {
     return str;
 }
 
+zstr *zstr_copy(const char *base, size_t start, size_t end) {
+    if(!base) { return zstr_empty(); }
+    if(*base == '\0') { return zstr_empty(); }
+    zstr *str = create(end - start);
+
+    size_t i = 0;
+
+    while(start < end) {
+        str->data[i] = base[start];
+        if(base[start] == '\0') {
+            str->size = i + 1;
+        }
+        ++i;
+        ++start;
+    }
+
+    return str;
+}
+
 char zstr_at(zstr *str, size_t index) {
     if(!str) {
         throw("Cannot read from null string!");
@@ -66,7 +85,7 @@ void zstr_expand(zstr *a, size_t amount) {
     if(!a) { return; }
     if(!a->data) { return; }
     size_t total = a->size + amount;
-    if(total < a->alloc) {
+    if(total > a->alloc) {
         /* Double allocated amount unless that's not enough to cover 'amount'; in that case,
            allocate enough for 'amount'. */
         a->alloc += (amount > a->alloc) ? amount : a->alloc;

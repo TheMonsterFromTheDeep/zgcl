@@ -11,6 +11,7 @@ typedef struct zstr {
 
 extern zstr *zstr_empty(void);
 extern zstr *zstr_from(const char*);
+extern zstr *zstr_copy(const char*,size_t,size_t);
 
 extern int zstr_eqz(const zstr*,const zstr*);
 extern int zstr_eqs(const zstr*,const char*);
