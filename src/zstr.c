@@ -34,6 +34,10 @@ zstr *zstr_from(const char *base) {
 zstr *zstr_copy(const char *base, size_t start, size_t end) {
     if(!base) { return zstr_empty(); }
     if(*base == '\0') { return zstr_empty(); }
+    if(start > end) {
+        throw("Start is greater than end!");
+        return NULL;
+    }
     zstr *str = create(end - start);
 
     size_t i = 0;
@@ -42,11 +46,20 @@ zstr *zstr_copy(const char *base, size_t start, size_t end) {
         str->data[i] = base[start];
         if(base[start] == '\0') {
             str->size = i + 1;
+            break;
         }
         ++i;
         ++start;
     }
 
+    return str;
+}
+
+zstr *zstr_clone(zstr *base) {
+    if(!base) { return zstr_empty(); }
+    
+    zstr *str = create(base->size);
+    memcpy(str->data, base->data, str->size + 1);
     return str;
 }
 
@@ -193,6 +206,27 @@ void zstr_backspace(zstr *str) {
     if(!str->data) { return; }
     if(str->size == 0) { return; }
     str->data[--str->size] = '\0';
+}
+
+void zstr_rewind(zstr *str, size_t amount) {
+    if(!str) { return; }
+    if(!str->data) { return; }
+    if(str->size == 0) { return; }
+    str->size -= amount;
+    if(str->size < 0) { str->size = 0; }
+    str->data[str->size] = '\0';
+}
+
+void zstr_delc(zstr *str, size_t index) {
+    if(!str) { return; }
+    if(!str->data) { return; }
+    if(index > str->size) { return; }
+    
+    size_t i;
+    for(i = index; i < str->size; ++i) {
+        str->data[i] = str->data[i + 1]; /* This will also copy null terminator */
+    }
+    --str->size;
 }
 
 void zstr_clear(zstr *str) {

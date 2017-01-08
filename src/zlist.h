@@ -36,6 +36,12 @@ extern size_t *zlist_alloc_ptr(void*);
     name = zlist_fit(name,sizeof(*name)); \
     name[zlist_size(name) - 1] = (value); \
 } while(0)
+#define zlist_insert(name,index,value) do { \
+    name = zlist_fit(name,sizeof(*name)); \
+    zlist_shift(name,sizeof(*name),index); \
+    name[index] = (value); \
+} while(0)
+#define zlist_del(name,index) (zlist_delete(name,sizeof(*name),index))
 
 #define zlist_removelast(name) (--(*zlist_size_ptr(name)))
 

@@ -92,6 +92,35 @@ void *zlist_expand(void *list, size_t elemsize, size_t newsize) {
     return list;
 }
 
+void zlist_shift(void *list, size_t elemsize, size_t index) {
+    if(!list) {
+        throw("Cannot insert in null list!");
+        return;
+    }
+    
+    char *data = (char*)list;
+    size_t i;
+    index *= elemsize;
+    for(i = (zlist_size(list) - 1) * elemsize; i > index; --i) {
+        data[i] = data[i - elemsize];
+    }
+}
+
+void zlist_delete(void *list, size_t elemsize, size_t index) {
+    if(!list) {
+        throw("Cannot delete from null list!");
+        return;
+    }
+    
+    char *data = (char*)list;
+    size_t i;
+    index *= elemsize;
+    for(i = index; i < (zlist_size(list) - 1) * elemsize; ++i) {
+        data[i] = data[i + elemsize];
+    }
+    --*zlist_size_ptr(list);
+}
+
 void zlist_free(void *list) {
     if(!list) { return; }
     free(((size_t*)list) - 2);

@@ -28,6 +28,7 @@ extern void zstr_inserts(zstr*,size_t,const char*);
 extern void zstr_insertc(zstr*,size_t,char);
 
 extern void zstr_backspace(zstr*);
+extern void zstr_rewind(zstr*,size_t);
 
 extern void zstr_clear(zstr*);
 
