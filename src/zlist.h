@@ -2,59 +2,34 @@
 #define ZLIST_H
 
 #include <stdlib.h>
-#include <string.h>
+#include "zdata.h"
 #include "zexception.h"
 
-/* Returns the size of the specified list. */
-extern size_t zlist_size(void*);
-/* Returns the number of preallocated elements for the specified list. */
-extern size_t zlist_alloc(void*);
-/* Frees the memory allocated for the specified list */
-extern void zlist_free(void*);
+/*
+ * These methods are "internal," so to speak - they perform functions for the
+ * macro with the corresponding name, and may behave unexpectedly if used by
+ * themselves.
+ */
+extern void *zlist_add_(void*,size_t);
+extern void *zlist_insert_(void*,size_t,size_t);
+extern void zlist_delete_(void*,size_t,size_t);
 
-/*  "Internal" methods - these are used by the macros to perform their various taks. */
-extern void *zlist_new(size_t,size_t);
-extern size_t zlist_index(void*,size_t);
-extern void *zlist_fit(void*,size_t);
-extern void *zlist_expand(void*,size_t,size_t);
-extern size_t *zlist_size_ptr(void*);
-extern size_t *zlist_alloc_ptr(void*);
+extern void zlist_backstep(void*);
+extern void zlist_rewind(void*,size_t);
+extern void zlist_clear(void*);
 
 #define zlist_of(type) type*
-#define zlist_init(name,size) name = zlist_new(size,sizeof(*name))
 
-#ifdef Z_NO_EXCEPT
-    #define zlist_set(name,index,value) ((name)[(index)] = (value))
-    #define zlist_get(name,index) ((name)[(index)])
-    #define zlist_get_ptr(name,index) ((name) + (index))
-#else
-    #define zlist_set(name,index,value) ((name)[zlist_index((name),(index))] = (value))
-    #define zlist_get(name,index) ((name)[zlist_index((name),(index))])
-    #define zlist_get_ptr(name,index) ((name) + zlist_index((name),(index)))
-#endif
-#define zlist_add(name,value) do { \
-    name = zlist_fit(name,sizeof(*name)); \
-    name[zlist_size(name) - 1] = (value); \
-} while(0)
-#define zlist_insert(name,index,value) do { \
-    name = zlist_fit(name,sizeof(*name)); \
-    zlist_shift(name,sizeof(*name),index); \
-    name[index] = (value); \
-} while(0)
-#define zlist_del(name,index) (zlist_delete(name,sizeof(*name),index))
+#define zlist_init(name,size)\
+    (name = znew((size),sizeof(*name)))
 
-#define zlist_removelast(name) (--(*zlist_size_ptr(name)))
+#define zlist_add(name,value)\
+    ((name=zlist_add_(name,sizeof(*name)))[zsize(name)-1]=(value))
 
-#define zlist_addall(name,type,...) do { \
-    type z_elems[] = { __VA_ARGS__ }; \
-    size_t z_len = sizeof(z_elems) / sizeof(type); \
-    size_t *z_list_len = zlist_size_ptr(name); \
-    size_t z_i = 0; \
-    name = zlist_expand(name,sizeof(*name),z_len); \
-    for(; z_i < z_len; ++z_i) { \
-        name[*z_list_len + z_i] = z_elems[z_i]; \
-    } \
-    *z_list_len += z_len; \
-} while(0)
+#define zlist_insert(name,index,value)\
+    ((name=zlist_insert_(name,sizeof(*name),(index)))[index]=(value))
 
-#endif
+#define zlist_delete(name,index)\
+    (zlist_delete_(name,sizeof(*name),index))
+
+#endif /* Header guard */

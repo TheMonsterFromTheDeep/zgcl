@@ -7,7 +7,7 @@
 SRC_DIR= ./src
 BUILD_DIR= ./build
 
-SRCS= zstr.c zlist.c zexception.c
+SRCS= zstr.c zlist.c zexception.c zdata.c
 
 OBJS= $(SRCS:%.c=$(BUILD_DIR)/%.o)
 

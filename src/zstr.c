@@ -2,20 +2,18 @@
 #include <string.h>
 
 #include "zstr.h"
+#include "zdata.h"
 #include "zexception.h"
 #include "zbase.h"
 
 static zstr *create(size_t size) {
-    zstr *str = malloc(sizeof(zstr));
-    char *tmp = malloc(1 + sizeof(char) * size);
-    if(!tmp) {
-        throw("Error while allocating string memory!");
+    zstr *str = znew(size + 1, char);
+    if(!str) {
         return NULL;
     }
-    str->data = tmp;
-    str->data[size] = '\0';
-    str->size = size;
-    str->alloc = size;
+    str[size] = '\0';
+    --*zsizeptr(str);
+    --*zallocptr(str);
     return str;
 }
 
@@ -27,25 +25,34 @@ zstr *zstr_from(const char *base) {
     if(!base) { return zstr_empty(); }
     if(*base == '\0') { return zstr_empty(); }
     zstr *str = create(strlen(base));
-    memcpy(str->data, base, str->size + 1);
+    memcpy(str, base, zsize(str) + 1);
     return str;
 }
 
 zstr *zstr_copy(const char *base, size_t start, size_t end) {
     if(!base) { return zstr_empty(); }
     if(*base == '\0') { return zstr_empty(); }
-    if(start > end) {
-        throw("Start is greater than end!");
-        return NULL;
-    }
-    zstr *str = create(end - start);
 
     size_t i = 0;
+    zstr *str;
+
+    /* Special case: copy in reverse */
+    if(start > end) {
+        str = create(start - end);
+
+        while(end > start) {
+            str[i++] = base[end--];
+        }
+
+        return str;
+    }
+
+    str = create(end - start);
 
     while(start < end) {
-        str->data[i] = base[start];
+        str[i] = base[start];
         if(base[start] == '\0') {
-            str->size = i + 1;
+            *zsizeptr(str) = i + 1;
             break;
         }
         ++i;
@@ -58,186 +65,150 @@ zstr *zstr_copy(const char *base, size_t start, size_t end) {
 zstr *zstr_clone(zstr *base) {
     if(!base) { return zstr_empty(); }
     
-    zstr *str = create(base->size);
-    memcpy(str->data, base->data, str->size + 1);
+    zstr *str = create(zsize(base));
+    memcpy(str, base, zsize(str) + 1);
     return str;
-}
-
-char zstr_at(zstr *str, size_t index) {
-    if(!str) {
-        throw("Cannot read from null string!");
-        return 0;
-    }
-    if(index > str->size) {
-        throw("Index out of string bounds!");
-        return 0;
-    }
-    return str->data[index];
 }
 
 int zstr_eqz(const zstr *a, const zstr *b) {
     if(!a || !b) { return a == b; }
-    if(!a->data || !b->data) { return a->data == b->data; }
-    if(a->size != b->size) { return FALSE; }
-    return !strcmp(a->data, b->data);
+    if(zsize(a) != zsize(b)) { return FALSE; }
+    return !strcmp(a, b);
 }
 
 int zstr_eqs(const zstr *a, const char *b) {
     if(!a || !b) { return (void*)a == (void*)b; }
-    if(!a->data) { return FALSE; }
-    return !strcmp(a->data, b);
+    return !strcmp(a, b);
 }
 
 int zstr_eqc(const zstr *a, char b) {
     if(!a) { return FALSE; }
-    if(a->size != 1) { return FALSE; }
-    return *a->data == b;
+    if(zsize(a) != 1) { return FALSE; }
+    return *a == b;
 }
 
-void zstr_expand(zstr *a, size_t amount) {
+static void zstr_expand(zstr **a, size_t amount) {
     if(!a) { return; }
-    if(!a->data) { return; }
-    size_t total = a->size + amount;
-    if(total > a->alloc) {
+    if(!*a) { return; }
+    size_t total = zsize(*a) + amount;
+    if(total > zalloc(a)) {
         /* Double allocated amount unless that's not enough to cover 'amount'; in that case,
            allocate enough for 'amount'. */
-        a->alloc += (amount > a->alloc) ? amount : a->alloc;
-        char *tmp = realloc(a->data, sizeof(char) * (a->alloc + 1));
+        zstr *tmp = zrealloc(*a, 
+            1 + (amount > zalloc(*a)) ? amount : zalloc(*a));
         if(!tmp) {
             throw("Error while reallocating string memory!");
             return;
         }
-        a->data = tmp;
+        *a = tmp;
+        --*zallocptr(*a);
     }
-    a->data[total] = '\0';
+    (*a)[total] = '\0';
 }
 
 void zstr_catz(zstr *str, const zstr *app) {
     if(!str || !app) { return; }
-    if(!str->data || !app->data) { return; }
 
     size_t i;
-    zstr_expand(str, app->size);
-    for(i = 0; i < app->size; ++i) {
-        str->data[str->size + i] = app->data[i];
+    zstr_expand(&str, zsize(app));
+    for(i = 0; i < zsize(app); ++i) {
+        str[zsize(str) + i] = app[i];
     }
-    str->size += app->size;
+    *zsizeptr(str) += zsize(app);
 }
 
 void zstr_cats(zstr *str, const char *app) {
     if(!str || !app) { return; }
-    if(!str->data) { return; }
 
     size_t i, len = strlen(app);
-    zstr_expand(str, len);
+    zstr_expand(&str, len);
     for(i = 0; i < len; ++i) {
-        str->data[str->size + i] = app[i];
+        str[zsize(str) + i] = app[i];
     }
-    str->size += len;
+    *zsizeptr(str) += len;
 }
 
 void zstr_catc(zstr *str, char c) {
     if(!str) { return; }
-    if(!str->data) { return; }
 
-    zstr_expand(str, 1);
-    str->data[str->size++] = c;
+    zstr_expand(&str, 1);
+    str[(*zsizeptr(str))++] = c;
 }
 
 void zstr_insertz(zstr *str, size_t index, const zstr *ins) {
     if(!str || !ins) { return; }
-    if(!str->data || !ins->data) { return; }
-    if(index > str->size) {
-        throw("Insertion out of string bounds!");
-        return;
-    }
+    if(index > zsize(str)) { return; }
     
     size_t i;
-    zstr_expand(str, ins->size);
-    for(i = str->size + ins->size + 1; i > index; --i) {
-        str->data[i] = str->data[i - ins->size]; 
+
+    zstr_expand(&str, zsize(ins));
+
+    for(i = zsize(str) + zsize(ins) + 1; i > index; --i) {
+        str[i] = str[i - zsize(ins)]; 
     }
 
-    for(i = 0; i < ins->size; ++i) {
-        str->data[i + index] = ins->data[i];
+    for(i = 0; i < zsize(ins); ++i) {
+        str[i + index] = ins[i];
     }
-    str->size += ins->size;
+    *zsizeptr(str) += zsize(ins);
 }
 
 void zstr_inserts(zstr *str, size_t index, const char *ins) {
     if(!str || !ins) { return; }
-    if(!str->data) { return; }
-    if(index > str->size) {
-        throw("Insertion out of string bounds!");
-        return;
-    }
+    if(index > zsize(str)) { return; }
     
     size_t i, len = strlen(ins);
-    zstr_expand(str, len);
-    for(i = str->size + len + 1; i > index; --i) {
-        str->data[i] = str->data[i - len]; 
+    zstr_expand(&str, len);
+    for(i = zsize(str) + len + 1; i > index; --i) {
+        str[i] = str[i - len]; 
     }
 
     for(i = 0; i < len; ++i) {
-        str->data[i + index] = ins[i];
+        str[i + index] = ins[i];
     }
-    str->size += len;
+    *zsizeptr(str) += len;
 }
 
 void zstr_insertc(zstr *str, size_t index, char ins) {
     if(!str) { return; }
-    if(!str->data) { return; }
-    if(index > str->size) {
-        throw("Insertion out of string bounds!");
-        return;
-    }
+    if(index > zsize(str)) { return; }
     
     size_t i;
-    zstr_expand(str, 1);
-    for(i = str->size + 2; i > index; --i) {
-        str->data[i] = str->data[i - 1]; 
+    zstr_expand(&str, 1);
+    for(i = zsize(str) + 2; i > index; --i) {
+        str[i] = str[i - 1]; 
     }
-    str->data[index] = ins;
-    ++str->size;
+    str[index] = ins;
+    ++*zsizeptr(str);
 }
 
 void zstr_backspace(zstr *str) {
     if(!str) { return; }
-    if(!str->data) { return; }
-    if(str->size == 0) { return; }
-    str->data[--str->size] = '\0';
+    if(zsize(str) == 0) { return; }
+    str[--*zsizeptr(str)] = '\0';
 }
 
 void zstr_rewind(zstr *str, size_t amount) {
     if(!str) { return; }
-    if(!str->data) { return; }
-    if(str->size == 0) { return; }
-    str->size -= amount;
-    if(str->size < 0) { str->size = 0; }
-    str->data[str->size] = '\0';
-}
-
-void zstr_delc(zstr *str, size_t index) {
-    if(!str) { return; }
-    if(!str->data) { return; }
-    if(index > str->size) { return; }
-    
-    size_t i;
-    for(i = index; i < str->size; ++i) {
-        str->data[i] = str->data[i + 1]; /* This will also copy null terminator */
-    }
-    --str->size;
+    if(zsize(str) == 0) { return; }
+    *zsizeptr(str) -= amount;
+    if(zsize(str) < 0) { *zsizeptr(str) = 0; }
+    str[zsize(str)] = '\0';
 }
 
 void zstr_clear(zstr *str) {
     if(!str) { return; }
-    if(!str->data) { return; }
-    str->size = 0;
-    str->data[0] = '\0';
+    *zsizeptr(str) = 0;
+    *str = '\0';
 }
 
-void zstr_free(zstr *str) {
+void zstr_delete(zstr *str, size_t index) {
     if(!str) { return; }
-    free(str->data);
-    free(str);
+    if(index > zsize(str)) { return; }
+    
+    size_t i;
+    for(i = index; i < zsize(str); ++i) {
+        str[i] = str[i + 1]; /* This will also copy null terminator */
+    }
+    --*zsizeptr(str);
 }
