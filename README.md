@@ -1,6 +1,10 @@
 ![zLib](logo.png)
 
 zLib is a C utility library built to provide cleaner and simpler structure for C code.
+
+# NOTICE
+As of [26bc43f](https://github.com/TheMonsterFromTheDeep/zlib/commit/26bc43fb15e0be2b583570a4b73eb4a11441ee31), this documentation is majorly outdated. It should hopefully be updated soon.
+
 # Features
 Right now, zLib features dynamic memory for generic types, a new string type, and exception handling (which will be disable-able
 in the future).
