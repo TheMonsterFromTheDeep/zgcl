@@ -10,7 +10,7 @@ static void zlist_expand(void **list, size_t elemsize) {
         void *tmp = zrealloct(*list, 1 + zalloc(*list) * 2, elemsize);
         if(!tmp) {
             throw("Error while reallocating list!");
-            return 0;
+            return;
         }
         *list = tmp;
     }
