@@ -12,7 +12,7 @@ static zstr *create(size_t size) {
         return NULL;
     }
     str[size] = '\0';
-    --*zsizeptr(str);
+    *zsizeptr(str) = size;
     --*zallocptr(str);
     return str;
 }
@@ -88,14 +88,12 @@ int zstr_eqc(const zstr *a, char b) {
 }
 
 static void zstr_expand(zstr **a, size_t amount) {
-    if(!a) { return; }
-    if(!*a) { return; }
     size_t total = zsize(*a) + amount;
-    if(total > zalloc(a)) {
+    if(total > zalloc(*a)) {
         /* Double allocated amount unless that's not enough to cover 'amount'; in that case,
            allocate enough for 'amount'. */
         zstr *tmp = zrealloc(*a, 
-            1 + (amount > zalloc(*a)) ? amount : zalloc(*a));
+            zalloc(*a) + 1 + ((amount > zalloc(*a)) ? amount : zalloc(*a)));
         if(!tmp) {
             throw("Error while reallocating string memory!");
             return;
@@ -106,80 +104,92 @@ static void zstr_expand(zstr **a, size_t amount) {
     (*a)[total] = '\0';
 }
 
-void zstr_catz(zstr *str, const zstr *app) {
-    if(!str || !app) { return; }
+#define STR (*strptr)
+
+void zstr_catz(zstr **strptr, const zstr *app) {
+    if(!strptr || !app) { return; }
+    if(!STR) { return; }
 
     size_t i;
-    zstr_expand(&str, zsize(app));
+    zstr_expand(strptr, zsize(app));
     for(i = 0; i < zsize(app); ++i) {
-        str[zsize(str) + i] = app[i];
+        STR[zsize(STR) + i] = app[i];
     }
-    *zsizeptr(str) += zsize(app);
+    (*zsizeptr(STR)) += zsize(app);
 }
 
-void zstr_cats(zstr *str, const char *app) {
-    if(!str || !app) { return; }
-
+void zstr_cats(zstr **strptr, const char *app) {
+    if(!strptr || !app) { return; }
+    if(!STR) { return; }
+ 
     size_t i, len = strlen(app);
-    zstr_expand(&str, len);
+
+    zstr_expand(strptr, len);
+
     for(i = 0; i < len; ++i) {
-        str[zsize(str) + i] = app[i];
+        STR[zsize(STR) + i] = app[i];
     }
-    *zsizeptr(str) += len;
+    *zsizeptr(STR) += len;
 }
 
-void zstr_catc(zstr *str, char c) {
-    if(!str) { return; }
+void zstr_catc(zstr **strptr, char c) {
+    if(!strptr) { return; }
+    if(!STR) { return; }
 
-    zstr_expand(&str, 1);
-    str[(*zsizeptr(str))++] = c;
+    zstr_expand(strptr, 1);
+    STR[zsize(STR)] = c;
+
+    (*zsizeptr(STR)) += 1;
 }
 
-void zstr_insertz(zstr *str, size_t index, const zstr *ins) {
-    if(!str || !ins) { return; }
-    if(index > zsize(str)) { return; }
+void zstr_insertz(zstr **strptr, size_t index, const zstr *ins) {
+    if(!strptr || !ins) { return; }
+    if(!STR) { return; }
+    if(index > zsize(STR)) { return; }
     
     size_t i;
 
-    zstr_expand(&str, zsize(ins));
+    zstr_expand(strptr, zsize(ins));
 
-    for(i = zsize(str) + zsize(ins) + 1; i > index; --i) {
-        str[i] = str[i - zsize(ins)]; 
+    for(i = zsize(STR) + zsize(ins) + 1; i > index; --i) {
+        STR[i] = STR[i - zsize(ins)]; 
     }
 
     for(i = 0; i < zsize(ins); ++i) {
-        str[i + index] = ins[i];
+        STR[i + index] = ins[i];
     }
-    *zsizeptr(str) += zsize(ins);
+    *zsizeptr(STR) += zsize(ins);
 }
 
-void zstr_inserts(zstr *str, size_t index, const char *ins) {
-    if(!str || !ins) { return; }
-    if(index > zsize(str)) { return; }
+void zstr_inserts(zstr **strptr, size_t index, const char *ins) {
+    if(!strptr || !ins) { return; }
+    if(!STR) { return; }
+    if(index > zsize(STR)) { return; }
     
     size_t i, len = strlen(ins);
-    zstr_expand(&str, len);
-    for(i = zsize(str) + len + 1; i > index; --i) {
-        str[i] = str[i - len]; 
+    zstr_expand(strptr, len);
+    for(i = zsize(STR) + len + 1; i > index; --i) {
+        STR[i] = STR[i - len]; 
     }
 
     for(i = 0; i < len; ++i) {
-        str[i + index] = ins[i];
+        STR[i + index] = ins[i];
     }
-    *zsizeptr(str) += len;
+    *zsizeptr(STR) += len;
 }
 
-void zstr_insertc(zstr *str, size_t index, char ins) {
-    if(!str) { return; }
-    if(index > zsize(str)) { return; }
-    
+void zstr_insertc(zstr **strptr, size_t index, char ins) {
+    if(!strptr) { return; }
+    if(!STR) { return; }
+    if(index > zsize(STR)) { return; }
+
     size_t i;
-    zstr_expand(&str, 1);
-    for(i = zsize(str) + 2; i > index; --i) {
-        str[i] = str[i - 1]; 
+    zstr_expand(strptr, 1);
+    for(i = zsize(STR) + 2; i > index; --i) {
+        STR[i] = STR[i - 1]; 
     }
-    str[index] = ins;
-    ++*zsizeptr(str);
+    STR[index] = ins;
+    ++*zsizeptr(STR);
 }
 
 void zstr_backspace(zstr *str) {

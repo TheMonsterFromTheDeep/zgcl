@@ -13,13 +13,13 @@ extern int zstr_eqz(const zstr*,const zstr*);
 extern int zstr_eqs(const zstr*,const char*);
 extern int zstr_eqc(const zstr*,char);
 
-extern void zstr_catz(zstr*,const zstr*);
-extern void zstr_cats(zstr*,const char*);
-extern void zstr_catc(zstr*,char);
+extern void zstr_catz(zstr**,const zstr*);
+extern void zstr_cats(zstr**,const char*);
+extern void zstr_catc(zstr**,char);
 
-extern void zstr_insertz(zstr*,size_t,const zstr*);
-extern void zstr_inserts(zstr*,size_t,const char*);
-extern void zstr_insertc(zstr*,size_t,char);
+extern void zstr_insertz(zstr**,size_t,const zstr*);
+extern void zstr_inserts(zstr**,size_t,const char*);
+extern void zstr_insertc(zstr**,size_t,char);
 
 extern void zstr_backspace(zstr*);
 extern void zstr_rewind(zstr*,size_t);
