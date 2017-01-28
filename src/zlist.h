@@ -24,10 +24,16 @@ extern void zlist_clear(void*);
     (name = znew((size),sizeof(*name)))
 
 #define zlist_add(name,value)\
-    ((name=zlist_add_(name,sizeof(*name)))[zsize(name)-1]=(value))
+    do {\
+        (name)=zlist_add_((name),sizeof(*name);\
+        (name)[zsize(name)-1]=(value))\
+    } while(0)
 
 #define zlist_insert(name,index,value)\
-    ((name=zlist_insert_(name,sizeof(*name),(index)))[index]=(value))
+    do {\
+        (name)=zlist_insert_((name),sizeof(*name),(index));\
+        (name)[index]=(value);\
+    } while(0)
 
 #define zlist_delete(name,index)\
     (zlist_delete_(name,sizeof(*name),index))
