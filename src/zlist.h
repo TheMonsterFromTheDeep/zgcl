@@ -25,8 +25,8 @@ extern void zlist_clear(void*);
 
 #define zlist_add(name,value)\
     do {\
-        (name)=zlist_add_((name),sizeof(*name);\
-        (name)[zsize(name)-1]=(value))\
+        (name)=zlist_add_((name),sizeof(*name));\
+        (name)[zsize(name)-1]=(value);\
     } while(0)
 
 #define zlist_insert(name,index,value)\
