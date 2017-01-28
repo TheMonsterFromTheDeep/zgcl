@@ -9,6 +9,8 @@ extern zstr *zstr_empty(void);
 extern zstr *zstr_from(const char*);
 extern zstr *zstr_copy(const char*,size_t,size_t);
 
+extern zstr *zstr_clone(zstr*);
+
 extern int zstr_eqz(const zstr*,const zstr*);
 extern int zstr_eqs(const zstr*,const char*);
 extern int zstr_eqc(const zstr*,char);
