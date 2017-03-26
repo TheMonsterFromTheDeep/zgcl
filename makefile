@@ -9,7 +9,7 @@ DEPS= $(OBJS:%.o=$(BUILD_DIR)/%.d)
 
 CFLAGS = -Wall
 
-LIB_NAME= zlib
+LIB_NAME= zgcl
 LIB_BUILDNAME= $(LIB_NAME:%=lib%.a)
 
 INSTALL_DIR?=/usr
